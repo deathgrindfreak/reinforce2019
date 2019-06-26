@@ -1,0 +1,102 @@
+* Tuesday
+** Security Jam
+*** AWS provides code jam to be used by organizations (in-house code jam)
+*** Permissions boundaries are interesting, might be of some use in the future for certain users: [[https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html][AWS Docs]] 
+** SDD319 Ensure the integrity of your code for fast and secure deployments
+*** 3rd party services available in AWS Marketplace for use in cloud.
+*** DevSecOps instead of DevOps (Security policy at every point, Build, Text, Distribute, Monitor)
+*** Precommit - Threat modeling, initial SAST (Veracode), code review
+*** Commit - Compile/build checks, SCA container security (WhiteSource), Unit tests
+**** Container Vulnerability Analysis scanners (Aqua)
+*** Acceptance stage - Secure infra build, functional testing, SCA, DAST, Unit testing
+**** Dynamic Analysis Security Testing (Qualys)
+*** Deploy - Provision runtime env, config management, RASP
+**** Runtime Application Self-Protection (Prevoty)
+*** Compliance - Automate it
+*** In summary: Continuous Compliance, SAST, DAST, SCA, CVA, RASP
+*** [[https://d1.awsstatic.com/whitepapers/architecture/AWS_Well-Architected_Framework.pdf][Well Architected Framework]]
+** FND310 How encryption works in AWS
+*** Minimize unauthorized physical access (AWS): data in transport (on the wire, etc ...), data at rest (encryption), data in use (prevent hands on access)
+*** Minimize unauthorized logical access (Veracity): data in transport (VPC, encryption on the wire), data at rest (encryption with AWS keys), data in use (remote reads)
+*** Access keys under our control
+**** MFA, cli password, api signing keys
+**** You alone can create/modify/delete resource permissions
+**** You have access to an audit event for every use of a credential or change to its state
+*** Encryption keys/certs under our control
+**** Keys are durable
+***** You trust AWS not to lose them
+***** Maybe a secure copy outside the cloud (probably not lol)
+**** Keys are highly available
+**** You alone can create/modify/delete permissions to use keys
+**** You have access to an audit event for every use of a key or change to its state
+*** AWS crypto stack
+**** Physical - Secure facilities and optical encryption using AES-256
+**** Data link layer - MACsec AES-256
+**** Network Layer - VPC Encryption | Cross-Region Paring | Amazon VPN
+**** Transport Layer - Amazon s2n | NLB-TLS | ALB | Cloudfront 
+**** ...
+*** ACM - public certs for ALB, cloudfront, etc ...  Manage PKI (typically painful)
+*** Exportable private certificates in ACM (used in EC2 instances, containers, IoT, etc ...).  Can handle PKI same way for public certs
+*** ELB (or other resource) talks to both ACM and KMS in order to provision certificates for signing
+*** s2n - TLS library to help with transport security
+**** Used by all AWS services.
+**** Is formally verified (pretty awesome)
+**** Probably too low level for us to care
+*** Symmetric key encryption for data at rest (AES-256)
+**** Encrypted symmetric key is stored along with data (encrypted with a master key)
+**** Plaintext keys in key hierarchy are stored in KMS (for unraveling keys for decryption)
+*** Client side encryption
+**** Encrypt before submitting to AWS
+**** supply keys or use keys in KMS
+*** Server-side encryption - just let AWS do it.
+*** AWS Encryption SDK
+**** Just need to know file stream location and key location (key provider)
+**** Can encrypt with different keys in different regions
+**** Cache data keys for re-use without calling to AWS
+**** Available in C, Java, Python and CLI
+*** Data key for each object, etc ... (could be billions of keys in S3, etc....) | master keys for a large number of data keys 
+*** master keys encrypt data keys, keys on Hardened Security Modules (generated and kept entirely in memory in the data center) decrypt master keys .
+**** No AWS operator can access HSM host
+**** No software updates allowed
+**** Updates have to pass extensive review and verification.  No keys are stored durably on the host, so reboots nuke keys.
+**** Ultra-hardcore about security here.
+**** SOC 1 - 3rd party verification on the above claims
+*** Every customer master key has a key policy integrated into IAM.
+*** EC2/EBS Model: Unique data key is provisioned and stored in volatile memory (only alive as long as resource exists).
+*** S3 model: Data keys used in volatile memory for short periods of time
+*** EC2 contains key pair that is provisioned on startup (nitro card, very cool).  This key is used to encrypt, transport and then decrypt data key.
+*** All KMS usage is logged in CloudTrail
+*** TONS of 3rd party compliance auditing done on this
+*** [[https://d0.awsstatic.com/whitepapers/KMS-Cryptographic-Details.pdf][KMS Cryptographic Details Whitepaper]] 
+* Wednesday
+** SEP316 Firecracker: Secure and Fast MicroVMS
+*** microVM (written in Rust)
+*** Packs servers with multiple workloads, they're trying to maximize workload efficiency per instance using statistical inference (pretty fascinating)
+*** Needed flexible VMs to run under AWS Lambda
+*** KVM-based virtualization (unique kernel, no kernel sharing)
+*** < 125 ms to launch, 150 microVMs per second per host 0_0 | < 5 MB memory footprint per VM
+*** Host-facing REST API
+*** Lambda worker - provisions environment for customer code execution (sandboxed)
+*** Old Architecture
+**** Customer code (One function)
+**** Lambda runtime (One function)
+**** Sandbox (One function)
+**** Guest OS (One Account)
+**** --- /\ Runs on EC2 Instances /\ ---
+**** Hypervisor (One Account)
+**** Host OS (Amazon Linux) (Many Account)
+**** Hardware (Many Account)
+*** Guest OS is shared for multiple functions, but only one AWS account
+*** New Architecture (Can run multiple accounts per bare metal instance)
+**** Customer code (One function)
+**** Lambda runtime (One function)
+**** Sandbox (One function)
+**** Guest OS (One Account)
+**** Hypervisor (Many Account)
+**** Host OS (Amazon Linux) (Many Account)
+**** --- /\ Can run multiple accounts on Bare Metal EC2 Instances /\ ---
+**** Hardware (Many Account)
+*** Eliminates need for "Warm Pools" (pre-warmed VMs)
+*** Probably the future: light as a container, secure as a VM
+*** [[https://github.com/firecracker-microvm/firecracker][Firecracker Github]] 
+** GRC328 Account Automation And Temporary AWS Credential Service
