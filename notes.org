@@ -100,3 +100,66 @@
 *** Probably the future: light as a container, secure as a VM
 *** [[https://github.com/firecracker-microvm/firecracker][Firecracker Github]] 
 ** GRC328 Account Automation And Temporary AWS Credential Service
+*** Account Creation Automation
+**** Riot Games moved from single to multi-account model for accountability of resources
+**** Needed automation for accounts, created inquisitor for creating logging to central cloudtrail 
+**** Automated initially with python cli using account creation API (brittle, didn't completely provision account)
+**** Ended up using step functions with lambdas for creating and provisioning an account (run in the master account)
+*** Permanent Credentials -> Temporary Credentials
+**** Riot engineer pushed public credentials to github, attackers used EC2 to mine bitcoin 0_0
+**** Built [[https://github.com/RiotGames/key-conjurer][Key Conjurer]] to provide AWS STS temporary credentials
+** SDD412 Identity and Access Control For Custom Enterprise Applications
+*** Security architecture used by Code Jam engineers
+*** AWS Cognito
+**** SSO has overhead/heavy lifting
+**** Cognito handles SSO | Manages user directory, hosted UI, standard tokens, federation, AWS IAM creds
+**** User pools - serverless directory, API driven
+**** User and group storage
+**** Customizable Hosted UI (pretty sweet)
+**** [[https://www.oauth.com/oauth2-servers/pkce/][OAUTH 2 PKCE]] 
+**** Built-in integrations in API Gateway, ALB, AWS Creds (Any AWS Service)
+*** Handling application level access control
+**** Policy based with IAM policies (API to API Access)
+**** Interceptor based (e.g. API Gateway Lambda custom authorizor) - generated on the fly
+**** Integrated into the apps business logic
+*** General Concept
+**** LDAP Groups -> SAML Attribures
+**** Amazon Cognito: SAML Attributes -> JIT user profile
+**** AWS Lambda Trigger: JIT user profile -> Groups, Roles -> JWT
+**** API Gateway: Validate JWT -> Application
+**** App: Groups, Roles from JWT -> context aware authorization
+**** AWS Amplify handles redirection
+*** [[https://en.wikipedia.org/wiki/SAML][SAML]] 
+*** [[https://docs.aws.amazon.com/cdk/api/latest/][AWS CDK]] 
+*** [[https://github.com/aws-samples/amazon-cognito-example-for-external-idp][Github For Demo Code]] 
+** FND330 Securing the Edge With AWS IoT Services
+*** All sorts of horrible exploits
+*** Tons of AWS IoT services
+*** AWS Shared Responsibliity Model
+**** Ensure that user created AWS services are secure
+**** AWS secures hardware, can't ensure that customer is handling things responsibly
+*** Customer responsible for 100% of device security -_-
+*** Three laws
+**** Physics - Latency sensitive apps
+**** Economics - Prohibitive cost of moving mostly throw-away data
+**** Regulatory - Restrictions on moving data is sometimes restricted
+*** AWS IoT Greengrass
+**** Extends AWS Cloud to the edge
+**** Acts as a deployment target for the cloud.  Executes lambdas, etc ... on the device 0_0
+**** TLS Mutual Auth between every connection
+**** Has a core device certificate used for TLS
+**** Can control access with IAM (device calls in to AWS services)
+**** AWS IoT Greengrass Secrets Manager allows device to call 3rd party services as well (Splunk, etc ...)
+**** Allows use with hardware secure element (secures local secrets for the device)
+*** AWS FreeRTOS
+**** Microcontrollers are ubiquitous (20B by 2022)
+**** Real-time OS (OS in a smart lightbulb)
+**** Creator of FreeRTOS joined AWS to drive the OS in a cloud direction
+**** Have built libraries for running FreeRTOS out of the box (local connectivity, cloud connectivity, etc ...)
+**** Secure OTA (over the air) updates
+**** Supports code signing
+**** [[https://en.wikipedia.org/wiki/MQTT][MQTT]] based communication
+**** [[https://en.wikipedia.org/wiki/Bluetooth_Low_Energy][BLE]] Support for local support installation
+**** Can use AWS Cognito to authenticate with the cloud
+** SDD311 Using AWS WAF To Protect Against Bots and Scrapers
+** FND233 Security Cartography: Assembling the Building Blocks Needed for Cloud Security
