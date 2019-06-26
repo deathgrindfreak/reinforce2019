@@ -162,4 +162,25 @@
 **** [[https://en.wikipedia.org/wiki/Bluetooth_Low_Energy][BLE]] Support for local support installation
 **** Can use AWS Cognito to authenticate with the cloud
 ** SDD311 Using AWS WAF To Protect Against Bots and Scrapers
+*** Bots
+**** Simple bots - signatures
+**** Bot Floods
+***** Simple rate-based blocking
+***** Error rate-based blocking
+***** Auto scaling and content caching
+**** Advanced Bots
+***** Honeypots
+***** Error-based blocking
+***** Reputational databases
+***** Custom signatures
+*** AWS WAF - Web Application Firewall
+**** Works on Layer 7 inspection
+**** Protect from SQLi, XSS, etc ...
+**** Create rules (rate-based, ip match, geo-ip filters, regex, etc ...)
+**** Monitoring - metrics, alarms, sample logs ...
+**** Can get predefined rule sets from marketplace
 ** FND233 Security Cartography: Assembling the Building Blocks Needed for Cloud Security
+*** Cloud adoption framework - set of whitepapers outlining proper cloud adoption (mostly big enterprise related, but perhaps useful)
+*** Helps to create infrastructure based on existing regulations
+*** Best practices in security: [[https://www.cisecurity.org/][CIS]] 
+*** [[https://aws.amazon.com/training/course-descriptions/security-fundamentals/][Security fundamentals course]] 
